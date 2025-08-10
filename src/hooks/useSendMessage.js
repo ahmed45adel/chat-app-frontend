@@ -1,6 +1,6 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
-import { useConversation } from "../zustand/useConversation";
+import useConversation from "../zustand/useConversation";
 import apiClient from "../utils/apiClient";
 
 const useSendMessage = () => {
