@@ -1,6 +1,7 @@
 import { useState } from "react";
 import toast from "react-hot-toast";
 import { useAuthContext } from "../context/AuthContext";
+import apiClient from "../utils/apiClient";
 
 const useLogin = () => {
 	const [loading, setLoading] = useState(false);
@@ -11,13 +12,7 @@ const useLogin = () => {
 		if (!success) return;
 		setLoading(true);
 		try {
-			const res = await fetch(`${import.meta.env.VITE_API_URL}/api/auth/login`, {
-				method: "POST",
-				headers: { "Content-Type": "application/json" },
-				body: JSON.stringify({ username, password }),
-			});
-
-			const data = await res.json();
+			const { data } = await apiClient.post('/api/auth/login', { username, password });
 			if (data.error) {
 				throw new Error(data.error);
 			}

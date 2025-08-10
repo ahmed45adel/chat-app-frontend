@@ -1,5 +1,6 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
+import apiClient from "../utils/apiClient";
 
 const useGetConversations = () => {
 	const [loading, setLoading] = useState(false);
@@ -9,8 +10,7 @@ const useGetConversations = () => {
 		const getConversations = async () => {
 			setLoading(true);
 			try {
-				const res = await fetch(`${import.meta.env.VITE_API_URL}/api/users`);
-				const data = await res.json();
+				const { data } = await apiClient.get('/api/users');
 				if (data.error) {
 					throw new Error(data.error);
 				}
