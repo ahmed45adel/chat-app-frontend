@@ -8,7 +8,7 @@ export default defineConfig({
 		port: 3000,
 		proxy: {
 			"/api": {
-				target: "https://chat-app-backend-one-lyart.vercel.app",
+				target: import.meta.env.VITE_API_URL,
 			},
 		},
 	},
