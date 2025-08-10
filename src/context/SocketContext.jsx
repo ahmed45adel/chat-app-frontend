@@ -1,41 +1,36 @@
 import { createContext, useState, useEffect, useContext } from "react";
+import { Realtime } from 'ably';
 import { useAuthContext } from "./AuthContext";
-import io from "socket.io-client";
 
 const SocketContext = createContext();
 
 export const useSocketContext = () => {
-	return useContext(SocketContext);
+  return useContext(SocketContext);
 };
 
 export const SocketContextProvider = ({ children }) => {
-	const [socket, setSocket] = useState(null);
-	const [onlineUsers, setOnlineUsers] = useState([]);
-	const { authUser } = useAuthContext();
+  const [channel, setChannel] = useState(null);
+  const [onlineUsers, setOnlineUsers] = useState([]);
+  const { authUser } = useAuthContext();
 
-	useEffect(() => {
-		if (authUser) {
-			const socket = io("https://chat-app-backend-one-lyart.vercel.app", {
-				query: {
-					userId: authUser._id,
-				},
-			});
+  useEffect(() => {
+    if (authUser) {
+      const ably = new Realtime.Promise({ authUrl: '/api/createTokenRequest' }); // You'll need to implement a token request endpoint
+      const channel = ably.channels.get(`users:${authUser._id}`);
+      setChannel(channel);
 
-			setSocket(socket);
+      channel.subscribe('getOnlineUsers', (message) => {
+        setOnlineUsers(message.data);
+      });
 
-			// socket.on() is used to listen to the events. can be used both on client and server side
-			socket.on("getOnlineUsers", (users) => {
-				setOnlineUsers(users);
-			});
+      return () => channel.detach();
+    } else {
+      if (channel) {
+        channel.detach();
+        setChannel(null);
+      }
+    }
+  }, [authUser]);
 
-			return () => socket.close();
-		} else {
-			if (socket) {
-				socket.close();
-				setSocket(null);
-			}
-		}
-	}, [authUser]);
-
-	return <SocketContext.Provider value={{ socket, onlineUsers }}>{children}</SocketContext.Provider>;
+  return <SocketContext.Provider value={{ channel, onlineUsers }}>{children}</SocketContext.Provider>;
 };
