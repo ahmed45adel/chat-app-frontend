@@ -14,21 +14,30 @@ export const SocketContextProvider = ({ children }) => {
   const { authUser } = useAuthContext();
 
   useEffect(() => {
+    let ablyClient;
+    let channelInstance;
+
     if (authUser) {
-      const ably = new Realtime.Promise({ authUrl: '/api/createTokenRequest' }); // You'll need to implement a token request endpoint
-      const channel = ably.channels.get(`users:${authUser._id}`);
-      setChannel(channel);
+      ablyClient = new Realtime({ authUrl: "/api/createTokenRequest" });
+      channelInstance = ablyClient.channels.get(`users:${authUser._id}`);
+      setChannel(channelInstance);
 
-      channel.subscribe('getOnlineUsers', (message) => {
+      const onOnlineUsers = (message) => {
         setOnlineUsers(message.data);
-      });
+      };
+      channelInstance.subscribe("getOnlineUsers", onOnlineUsers);
 
-      return () => channel.detach();
-    } else {
-      if (channel) {
-        channel.detach();
+      // Cleanup function to be run when the component unmounts or authUser changes.
+      return () => {
+        if (channelInstance) {
+          channelInstance.unsubscribe("getOnlineUsers", onOnlineUsers);
+          channelInstance.detach();
+        }
+        if (ablyClient) {
+          ablyClient.close();
+        }
         setChannel(null);
-      }
+      };
     }
   }, [authUser]);
 
