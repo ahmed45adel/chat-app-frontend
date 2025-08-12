@@ -11,7 +11,7 @@ const apiClient = axios.create({
 // Add a request interceptor
 apiClient.interceptors.request.use(
   config => {
-    const token = Cookies.get('chat-user') || localStorage.getItem("chat-user", JSON.stringify(data));
+    const token = Cookies.get('chat-user');
     if (token) {
       config.headers['Authorization'] = `Bearer ${token}`;
     }
