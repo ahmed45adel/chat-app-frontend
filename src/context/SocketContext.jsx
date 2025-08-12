@@ -17,7 +17,12 @@ export const SocketContextProvider = ({ children }) => {
   useEffect(() => {
     let ably, userChannel;
     if (authUser) {
-      ably = new Realtime({ authUrl: '/api/createTokenRequest' });
+      ably = new Realtime({ 
+        authUrl: 'https://chat-app-backend-one-lyart.vercel.app/api/createTokenRequest',
+        authHeaders: {
+          'Authorization': `Bearer ${authUser.token}`
+        }
+      });
       setAblyClient(ably);
 
       // Channel name MUST match with backend channel
