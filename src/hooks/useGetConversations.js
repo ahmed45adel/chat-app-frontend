@@ -11,7 +11,7 @@ const useGetConversations = () => {
 		const getConversations = async () => {
 			setLoading(true);
 			try {
-				const res = await fetch("/api/conversations", {
+				const res = await fetch("/api/users", {
 					headers: {
 						Authorization: `Bearer ${authUser.token}`,
 					},
