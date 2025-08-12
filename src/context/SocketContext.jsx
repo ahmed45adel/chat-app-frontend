@@ -1,6 +1,7 @@
 import { createContext, useState, useEffect, useContext } from "react";
 import { Realtime } from 'ably';
 import { useAuthContext } from "./AuthContext";
+import Cookies from 'js-cookie';
 
 const SocketContext = createContext();
 
@@ -16,11 +17,12 @@ export const SocketContextProvider = ({ children }) => {
 
   useEffect(() => {
     let ably, userChannel;
+    const token = Cookies.get('chat-user');
     if (authUser) {
       ably = new Realtime({ 
         authUrl: 'https://chat-app-backend-one-lyart.vercel.app/api/createTokenRequest',
         authHeaders: {
-          'Authorization': `Bearer ${JSON.parse(localStorage.getItem("chat-user")).token}`
+          'Authorization': `Bearer ${token}`
         }
       });
       setAblyClient(ably);
