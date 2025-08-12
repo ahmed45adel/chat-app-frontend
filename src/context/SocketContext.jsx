@@ -14,30 +14,21 @@ export const SocketContextProvider = ({ children }) => {
   const { authUser } = useAuthContext();
 
   useEffect(() => {
-    let ablyClient;
-    let channelInstance;
-
     if (authUser) {
-      ablyClient = new Realtime({ authUrl: "/api/createTokenRequest" });
-      channelInstance = ablyClient.channels.get(`users:${authUser._id}`);
-      setChannel(channelInstance);
+      const ably = new Realtime({ authUrl: '/api/createTokenRequest' });
+      const channel = ably.channels.get(`users:${authUser._id}`);
+      setChannel(channel);
 
-      const onOnlineUsers = (message) => {
+      channel.subscribe('getOnlineUsers', (message) => {
         setOnlineUsers(message.data);
-      };
-      channelInstance.subscribe("getOnlineUsers", onOnlineUsers);
+      });
 
-      // Cleanup function to be run when the component unmounts or authUser changes.
-      return () => {
-        if (channelInstance) {
-          channelInstance.unsubscribe("getOnlineUsers", onOnlineUsers);
-          channelInstance.detach();
-        }
-        if (ablyClient) {
-          ablyClient.close();
-        }
+      return () => channel.detach();
+    } else {
+      if (channel) {
+        channel.detach();
         setChannel(null);
-      };
+      }
     }
   }, [authUser]);
 
