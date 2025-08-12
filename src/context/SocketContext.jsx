@@ -20,7 +20,7 @@ export const SocketContextProvider = ({ children }) => {
       ably = new Realtime({ 
         authUrl: 'https://chat-app-backend-one-lyart.vercel.app/api/createTokenRequest',
         authHeaders: {
-          'Authorization': `Bearer ${authUser.token}`
+          'Authorization': `Bearer ${JSON.parse(localStorage.getItem("chat-user")).token}`
         }
       });
       setAblyClient(ably);
