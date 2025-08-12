@@ -10,27 +10,51 @@ export const useSocketContext = () => {
 
 export const SocketContextProvider = ({ children }) => {
   const [channel, setChannel] = useState(null);
+  const [ablyClient, setAblyClient] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const { authUser } = useAuthContext();
 
   useEffect(() => {
+    let ably, userChannel;
     if (authUser) {
-      const ably = new Realtime({ authUrl: '/api/createTokenRequest' });
-      const channel = ably.channels.get(`users:${authUser._id}`);
-      setChannel(channel);
+      ably = new Realtime({ authUrl: '/api/createTokenRequest' });
+      setAblyClient(ably);
 
-      channel.subscribe('getOnlineUsers', (message) => {
+      // Channel name MUST match with backend channel
+      userChannel = ably.channels.get(`chat:${authUser._id}`);
+      setChannel(userChannel);
+
+      const onlineUsersListener = (message) => {
         setOnlineUsers(message.data);
-      });
+      };
+      userChannel.subscribe('getOnlineUsers', onlineUsersListener);
 
-      return () => channel.detach();
+      // Cleanup function
+      return () => {
+        userChannel.unsubscribe('getOnlineUsers', onlineUsersListener);
+        userChannel.detach();
+        ably.close();
+        setChannel(null);
+        setAblyClient(null);
+      };
     } else {
+      // Cleanup if user logs out
       if (channel) {
         channel.detach();
         setChannel(null);
       }
+      if (ablyClient) {
+        ablyClient.close();
+        setAblyClient(null);
+      }
     }
+    // Only run effect on authUser changes
+    // eslint-disable-next-line
   }, [authUser]);
 
-  return <SocketContext.Provider value={{ channel, onlineUsers }}>{children}</SocketContext.Provider>;
+  return (
+    <SocketContext.Provider value={{ channel, onlineUsers }}>
+      {children}
+    </SocketContext.Provider>
+  );
 };
