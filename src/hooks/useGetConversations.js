@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import toast from "react-hot-toast";
 import { useAuthContext } from "../context/AuthContext";
+import apiClient from "../utils/apiClient";
 
 const useGetConversations = () => {
 	const [loading, setLoading] = useState(false);
@@ -11,7 +12,7 @@ const useGetConversations = () => {
 		const getConversations = async () => {
 			setLoading(true);
 			try {
-				const res = await axios.get("/api/user");
+				const res = await apiClient.get("/api/user");
 				const data = await res.json();
 				if (data.error) {
 					throw new Error(data.error);
