@@ -14,23 +14,19 @@ export const SocketContextProvider = ({ children }) => {
   const [ablyClient, setAblyClient] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const { authUser } = useAuthContext();
-  // const token = Cookies.get('chat-user');
-
-  // console.log(token, 'outside')
-
+  
+  
   useEffect(() => {
     let ably, userChannel;
-    // console.log(token, 'before')
+    const token = Cookies.get('chat-user');
+    console.log(token, 'before')
     if (authUser) {
-    // console.log(token, 'after')
-      // ably = new Realtime({ 
-      //   authUrl: 'https://chat-app-backend-one-lyart.vercel.app/api/createTokenRequest',
-      //   authHeaders: {
-      //     'Authorization': `Bearer ${token}`
-      //   }
-      // });
+    console.log(token, 'after')
       ably = new Realtime({ 
-        authUrl: 'https://chat-app-backend-one-lyart.vercel.app/api/createTokenRequest'
+        authUrl: `${import.meta.env.VITE_API_URL}/api/createTokenRequest`,
+        authHeaders: {
+          'Authorization': `Bearer ${token}`
+        }
       });
       setAblyClient(ably);
 
