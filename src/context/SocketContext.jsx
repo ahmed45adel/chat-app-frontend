@@ -19,7 +19,7 @@ export const SocketContextProvider = ({ children }) => {
     let ably, userChannel;
     if (authUser) {
          ably = new Realtime({
-        authUrl: `${import.meta.env.VITE_API_URL}/api/createTokenRequest`
+        authUrl: `${import.meta.env.VITE_API_URL}/api/createTokenRequest?userId=${authUser._id}`
       });
       setAblyClient(ably);
 
