@@ -18,6 +18,7 @@ export const SocketContextProvider = ({ children }) => {
   useEffect(() => {
     let ably, userChannel;
     if (authUser) {
+      console.log(authUser)
       ably = new Realtime({
         authUrl: `${import.meta.env.VITE_API_URL}/api/createTokenRequest`,
         authHeaders: {
