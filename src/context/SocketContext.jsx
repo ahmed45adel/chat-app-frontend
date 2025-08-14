@@ -14,10 +14,12 @@ export const SocketContextProvider = ({ children }) => {
   const [ablyClient, setAblyClient] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const { authUser } = useAuthContext();
+  const token = Cookies.get('chat-user');
+
+  console.log(token, 'outside')
 
   useEffect(() => {
     let ably, userChannel;
-    const token = Cookies.get('chat-user');
     console.log(token, 'before')
     if (authUser) {
     console.log(token, 'after')
