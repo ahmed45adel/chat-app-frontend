@@ -23,8 +23,9 @@ const useSignup = () => {
 			if (data.error) {
 				throw new Error(data.error);
 			}
-			localStorage.setItem("my-user", JSON.stringify(data));
-			setAuthUser(data);
+			const userWithToken = {...data, token: data.token};
+			localStorage.setItem("my-user", JSON.stringify(userWithToken));
+			setAuthUser(userWithToken);
 		} catch (error) {
 			toast.error(error.message);
 		} finally {

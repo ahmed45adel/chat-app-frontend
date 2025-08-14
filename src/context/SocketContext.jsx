@@ -1,7 +1,6 @@
 import { createContext, useState, useEffect, useContext } from "react";
 import { Realtime } from 'ably';
 import { useAuthContext } from "./AuthContext";
-import Cookies from 'js-cookie';
 
 const SocketContext = createContext();
 
@@ -14,20 +13,17 @@ export const SocketContextProvider = ({ children }) => {
   const [ablyClient, setAblyClient] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const { authUser } = useAuthContext();
+  const token = JSON.parse(localStorage.getItem("my-user")).token;
   
   
   useEffect(() => {
     let ably, userChannel;
-    const token = Cookies.get('chat-user');
-    console.log(token, 'before')
     if (authUser) {
-    console.log(token, 'after')
-      ably = new Realtime({ 
-        authUrl: `${import.meta.env.VITE_API_URL}/api/createTokenRequest`,
+      ably = new Realtime({
+          authUrl: `${import.meta.env.VITE_API_URL}/api/createTokenRequest`,
         authHeaders: {
           'Authorization': `Bearer ${token}`
-        }
-      });
+    }});
       setAblyClient(ably);
 
       // Channel name MUST match with backend channel
