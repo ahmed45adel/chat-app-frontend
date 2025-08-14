@@ -2,7 +2,6 @@ import { useState } from "react";
 import toast from "react-hot-toast";
 import { useAuthContext } from "../context/AuthContext";
 import apiClient from "../utils/apiClient";
-import Cookies from 'js-cookie';
 
 const useLogin = () => {
 	const [loading, setLoading] = useState(false);
@@ -18,10 +17,7 @@ const useLogin = () => {
 			if (data.error) {
 				throw new Error(data.error);
 			}
-			const token = Cookies.get('chat-user');
-			const userWithToken = {...data, token: token};
-			console.log(token)
-			console.log(userWithToken)
+			const userWithToken = {data};
 			localStorage.setItem("my-user", JSON.stringify(userWithToken));
 			setAuthUser(userWithToken);
 		} catch (error) {

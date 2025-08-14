@@ -18,12 +18,12 @@ export const SocketContextProvider = ({ children }) => {
   useEffect(() => {
     let ably, userChannel;
     if (authUser) {
-      const token = JSON.parse(localStorage.getItem("my-user")).token;
       ably = new Realtime({
-          authUrl: `${import.meta.env.VITE_API_URL}/api/createTokenRequest`,
+        authUrl: `${import.meta.env.VITE_API_URL}/api/createTokenRequest`,
         authHeaders: {
-          'Authorization': `Bearer ${token}`
-    }});
+          Authorization: `Bearer ${authUser?.token}`
+        }
+      });
       setAblyClient(ably);
 
       // Channel name MUST match with backend channel
