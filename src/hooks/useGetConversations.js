@@ -12,11 +12,9 @@ const useGetConversations = () => {
 		const getConversations = async () => {
 			setLoading(true);
 			try {
-				const res = await apiClient.get("/api/users");
-				if (res.error) {
-					throw new Error(res.error);
-				}
-				setConversations(res);
+				const { data } = await apiClient.get("/api/users");
+				if (data.error) throw new Error(data.error);
+				setConversations(data);
 			} catch (error) {
 				toast.error(error.message);
 			} finally {
