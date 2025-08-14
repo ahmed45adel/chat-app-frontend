@@ -13,12 +13,12 @@ export const SocketContextProvider = ({ children }) => {
   const [ablyClient, setAblyClient] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const { authUser } = useAuthContext();
-  const token = JSON.parse(localStorage.getItem("my-user")).token;
   
   
   useEffect(() => {
     let ably, userChannel;
     if (authUser) {
+      const token = JSON.parse(localStorage.getItem("my-user")).token;
       ably = new Realtime({
           authUrl: `${import.meta.env.VITE_API_URL}/api/createTokenRequest`,
         authHeaders: {
