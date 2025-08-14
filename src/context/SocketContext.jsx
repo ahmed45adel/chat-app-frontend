@@ -18,7 +18,9 @@ export const SocketContextProvider = ({ children }) => {
   useEffect(() => {
     let ably, userChannel;
     const token = Cookies.get('chat-user');
+    console.log(token, 'before')
     if (authUser) {
+    console.log(token, 'after')
       ably = new Realtime({ 
         authUrl: 'https://chat-app-backend-one-lyart.vercel.app/api/createTokenRequest',
         authHeaders: {
