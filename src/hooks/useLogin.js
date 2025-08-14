@@ -20,6 +20,8 @@ const useLogin = () => {
 			}
 			const token = Cookies.get('chat-user');
 			const userWithToken = {...data, token: token};
+			console.log(token)
+			console.log(userWithToken)
 			localStorage.setItem("my-user", JSON.stringify(userWithToken));
 			setAuthUser(userWithToken);
 		} catch (error) {
