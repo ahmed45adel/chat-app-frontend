@@ -13,7 +13,7 @@ const useGetConversations = () => {
 			setLoading(true);
 			try {
 				const res = await apiClient.get("/api/users");
-				const data = await res.json();
+				const data = await res?.json();
 				if (data.error) {
 					throw new Error(data.error);
 				}
