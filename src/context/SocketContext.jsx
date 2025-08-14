@@ -26,7 +26,6 @@ export const SocketContextProvider = ({ children }) => {
          ably = new Realtime({
         authUrl: urlWithParams
       });
-      console.log(ablyURL, params, urlWithParams)
       setAblyClient(ably);
 
       // Channel name MUST match with backend channel
