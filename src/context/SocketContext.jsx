@@ -19,7 +19,7 @@ export const SocketContextProvider = ({ children }) => {
     let ably, userChannel;
     if (authUser) {
       const ablyURL = `${import.meta.env.VITE_API_URL}/api/createTokenRequest`;
-      const userId = authUser._id;
+      const userId = authUser.data._id;
       const params = new URLSearchParams({
           userId: userId,
         });
