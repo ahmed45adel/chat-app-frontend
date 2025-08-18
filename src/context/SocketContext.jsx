@@ -1,7 +1,7 @@
 import { createContext, useState, useEffect, useContext } from "react";
 import { Realtime } from 'ably';
 import { useAuthContext } from "./AuthContext";
-
+import apiClient from "../utils/apiClient";
 const SocketContext = createContext();
 
 export const useSocketContext = () => {
@@ -36,6 +36,7 @@ export const SocketContextProvider = ({ children }) => {
         setOnlineUsers(message.data);
       };
       userChannel.subscribe('getOnlineUsers', onlineUsersListener);
+      apiClient.post('/api/userConnected', { userId: authUser._id });
 
       // Cleanup function
       return () => {
@@ -44,6 +45,7 @@ export const SocketContextProvider = ({ children }) => {
         ably.close();
         setChannel(null);
         setAblyClient(null);
+        apiClient.post('/api/userDisconnected', { userId: authUser._id });
       };
     } else {
       // Cleanup if user logs out
