@@ -12,7 +12,7 @@ const useListenMessages = () => {
       const newMessage = { ...message.data, shouldShake: true };
       const sound = new Audio(notificationSound);
       sound.play();
-      setMessages([...messages, newMessage]);
+      setMessages((prevMessages) => [...prevMessages, newMessage]);
     };
 
     channel?.subscribe('newMessage', handleNewMessage);
