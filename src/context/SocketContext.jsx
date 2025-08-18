@@ -34,10 +34,10 @@ export const SocketContextProvider = ({ children }) => {
       setChannel(userChannel);
 
       const onlineUsersListener = (message) => {
+        console.log(message)
         setOnlineUsers(message.data);
       };
       userChannel.subscribe('getOnlineUsers', onlineUsersListener);
-      console.log(authUser.data)
       apiClient.post('/api/userConnected', { userId: userId });
 
       // Cleanup function
