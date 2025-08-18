@@ -1,8 +1,7 @@
 import { createContext, useState, useEffect, useContext } from "react";
-import { Realtime } from "ably";
+import { Realtime } from 'ably';
 import { useAuthContext } from "./AuthContext";
 import apiClient from "../utils/apiClient";
-
 const SocketContext = createContext();
 
 export const useSocketContext = () => {
@@ -10,65 +9,60 @@ export const useSocketContext = () => {
 };
 
 export const SocketContextProvider = ({ children }) => {
+  const [channel, setChannel] = useState(null);
   const [ablyClient, setAblyClient] = useState(null);
-  const [channel, setChannel] = useState(null);        // 🔥 personal messages channel
-  const [presenceChannel, setPresenceChannel] = useState(null); // 🔥 new global presence channel
   const [onlineUsers, setOnlineUsers] = useState([]);
   const { authUser } = useAuthContext();
-
+  
+  
   useEffect(() => {
-    let ably, userChannel, globalChannel;
-
+    let ably, userChannel;
     if (authUser) {
-      const userId = authUser.data._id;
       const ablyURL = `${import.meta.env.VITE_API_URL}/api/createTokenRequest`;
-
-      // create client
-      ably = new Realtime({ authUrl: `${ablyURL}?userId=${userId}` });
+      const userId = authUser.data._id;
+      const params = new URLSearchParams({
+          userId: userId,
+        });
+      const urlWithParams = `${ablyURL}?${params.toString()}`;
+         ably = new Realtime({
+        authUrl: urlWithParams
+      });
       setAblyClient(ably);
 
-      // 🔹 Global presence channel
-      globalChannel = ably.channels.get("chat:global"); // for online users
-      setPresenceChannel(globalChannel);
-
-      const onlineUsersListener = (message) => {
-        setOnlineUsers(message.data);
-      };
-      globalChannel.subscribe("getOnlineUsers", onlineUsersListener);
-
-      // 🔹 Personal channel (for your messages)
-      userChannel = ably.channels.get(`chat:${userId}`);
+      // Channel name MUST match with backend channel
+      userChannel = ably.channels.get(`chat:global`);
       setChannel(userChannel);
 
-      // 🔹 Notify backend this user joined, then bootstrap presence list
+      const onlineUsersListener = (message) => {
+        console.log(message)
+        setOnlineUsers(message.data);
+      };
+      userChannel.subscribe('getOnlineUsers', onlineUsersListener);
       apiClient.post("/api/userConnected", { userId })
-        .then(() => apiClient.get("/api/onlineUsers"))
-        .then((res) => setOnlineUsers(res.data.onlineUsers))
-        .catch(console.error);
+      .then(() => {
+        return apiClient.get("/api/onlineUsers");
+      })
+      .then((res) => {
+        setOnlineUsers(res.data.onlineUsers);
+      })
+      .catch(console.error);
 
-      // cleanup
+      // Cleanup function
       return () => {
-        globalChannel.unsubscribe("getOnlineUsers", onlineUsersListener);
-        globalChannel.detach();
+        userChannel.unsubscribe('getOnlineUsers', onlineUsersListener);
         userChannel.detach();
         ably.close();
-
         setChannel(null);
-        setPresenceChannel(null);
         setAblyClient(null);
-        setOnlineUsers([]);
-
-        // notify backend disconnect
         apiClient.post("/api/userDisconnected", { userId })
-          .then(() => apiClient.get("/api/onlineUsers"))
-          .then((res) => setOnlineUsers(res.data.onlineUsers))
-          .catch(console.error);
+        .then(() => apiClient.get("/api/onlineUsers"))
+        .then((res) => {
+          setOnlineUsers(res.data.onlineUsers); // sync after disconnect
+        })
+        .catch(console.error);
       };
     } else {
-      if (presenceChannel) {
-        presenceChannel.detach();
-        setPresenceChannel(null);
-      }
+      // Cleanup if user logs out
       if (channel) {
         channel.detach();
         setChannel(null);
@@ -77,8 +71,9 @@ export const SocketContextProvider = ({ children }) => {
         ablyClient.close();
         setAblyClient(null);
       }
-      setOnlineUsers([]);
     }
+    // Only run effect on authUser changes
+    // eslint-disable-next-line
   }, [authUser]);
 
   return (
@@ -87,5 +82,3 @@ export const SocketContextProvider = ({ children }) => {
     </SocketContext.Provider>
   );
 };
-
-export default SocketContextProvider;
