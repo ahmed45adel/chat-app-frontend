@@ -19,8 +19,9 @@ export const SocketContextProvider = ({ children }) => {
     let ably, userChannel;
     if (authUser) {
       const ablyURL = `${import.meta.env.VITE_API_URL}/api/createTokenRequest`;
+      const userId = authUser._id;
       const params = new URLSearchParams({
-          userId: authUser._id,
+          userId: userId,
         });
       const urlWithParams = `${ablyURL}?${params.toString()}`;
          ably = new Realtime({
@@ -29,15 +30,15 @@ export const SocketContextProvider = ({ children }) => {
       setAblyClient(ably);
 
       // Channel name MUST match with backend channel
-      userChannel = ably.channels.get(`chat:${authUser._id}`);
+      userChannel = ably.channels.get(`chat:${userId}`);
       setChannel(userChannel);
 
       const onlineUsersListener = (message) => {
         setOnlineUsers(message.data);
       };
       userChannel.subscribe('getOnlineUsers', onlineUsersListener);
-      console.log(authUser._id)
-      apiClient.post('/api/userConnected', { userId: authUser._id });
+      console.log(authUser)
+      apiClient.post('/api/userConnected', { userId: userId });
 
       // Cleanup function
       return () => {
@@ -46,7 +47,7 @@ export const SocketContextProvider = ({ children }) => {
         ably.close();
         setChannel(null);
         setAblyClient(null);
-        apiClient.post('/api/userDisconnected', { userId: authUser._id });
+        apiClient.post('/api/userDisconnected', { userId: userId });
       };
     } else {
       // Cleanup if user logs out
