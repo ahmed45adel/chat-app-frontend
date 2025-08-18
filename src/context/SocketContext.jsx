@@ -37,7 +37,7 @@ export const SocketContextProvider = ({ children }) => {
         setOnlineUsers(message.data);
       };
       userChannel.subscribe('getOnlineUsers', onlineUsersListener);
-      console.log(authUser)
+      console.log(authUser.data)
       apiClient.post('/api/userConnected', { userId: userId });
 
       // Cleanup function
