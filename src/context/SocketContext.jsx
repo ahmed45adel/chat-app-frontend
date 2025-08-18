@@ -30,7 +30,7 @@ export const SocketContextProvider = ({ children }) => {
       setAblyClient(ably);
 
       // Channel name MUST match with backend channel
-      userChannel = ably.channels.get(`chat:${userId}`);
+      userChannel = ably.channels.get(`chat:global`);
       setChannel(userChannel);
 
       const onlineUsersListener = (message) => {
