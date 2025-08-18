@@ -38,7 +38,14 @@ export const SocketContextProvider = ({ children }) => {
         setOnlineUsers(message.data);
       };
       userChannel.subscribe('getOnlineUsers', onlineUsersListener);
-      apiClient.post('/api/userConnected', { userId: userId });
+      apiClient.post("/api/userConnected", { userId })
+      .then(() => {
+        return apiClient.get("/api/onlineUsers");
+      })
+      .then((res) => {
+        setOnlineUsers(res.data.onlineUsers);
+      })
+      .catch(console.error);
 
       // Cleanup function
       return () => {
@@ -47,7 +54,12 @@ export const SocketContextProvider = ({ children }) => {
         ably.close();
         setChannel(null);
         setAblyClient(null);
-        apiClient.post('/api/userDisconnected', { userId: userId });
+        apiClient.post("/api/userDisconnected", { userId })
+        .then(() => apiClient.get("/api/onlineUsers"))
+        .then((res) => {
+          setOnlineUsers(res.data.onlineUsers); // sync after disconnect
+        })
+        .catch(console.error);
       };
     } else {
       // Cleanup if user logs out
