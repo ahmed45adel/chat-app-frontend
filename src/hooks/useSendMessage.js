@@ -5,7 +5,7 @@ import apiClient from "../utils/apiClient";
 
 const useSendMessage = () => {
 	const [loading, setLoading] = useState(false);
-	const { messages, setMessages, selectedConversation } = useConversation();
+	const { appendMessage, selectedConversation } = useConversation();
 
 	const sendMessage = async (message) => {
 		setLoading(true);
@@ -13,7 +13,7 @@ const useSendMessage = () => {
 			const { data } = await apiClient.post(`/api/messages/send/${selectedConversation._id}`, { message });
 			if (data.error) throw new Error(data.error);
 
-			setMessages([...messages, data]);
+			appendMessage(data);
 		} catch (error) {
 			toast.error(error.message);
 		} finally {
