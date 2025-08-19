@@ -1,7 +1,8 @@
 import { createContext, useState, useEffect, useContext } from "react";
-import { Realtime } from 'ably';
+import { Realtime } from "ably";
 import { useAuthContext } from "./AuthContext";
 import apiClient from "../utils/apiClient";
+
 const SocketContext = createContext();
 
 export const useSocketContext = () => {
@@ -9,60 +10,69 @@ export const useSocketContext = () => {
 };
 
 export const SocketContextProvider = ({ children }) => {
-  const [channel, setChannel] = useState(null);
+  const [channel, setChannel] = useState(null);       // <-- per-user channel (for messages)
   const [ablyClient, setAblyClient] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const { authUser } = useAuthContext();
-  
-  
+
   useEffect(() => {
-    let ably, userChannel;
+    let ably, globalChannel, personalChannel;
     if (authUser) {
       const ablyURL = `${import.meta.env.VITE_API_URL}/api/createTokenRequest`;
       const userId = authUser.data._id;
-      const params = new URLSearchParams({
-          userId: userId,
-        });
+      const params = new URLSearchParams({ userId });
       const urlWithParams = `${ablyURL}?${params.toString()}`;
-         ably = new Realtime({
-        authUrl: urlWithParams
-      });
+
+      ably = new Realtime({ authUrl: urlWithParams });
       setAblyClient(ably);
 
-      // Channel name MUST match with backend channel
-      userChannel = ably.channels.get(`chat:global`);
-      setChannel(userChannel);
-
+      // ----------------------------
+      // subscribe to global channel (onlineUsers)
+      // ----------------------------
+      globalChannel = ably.channels.get("chat:global");
       const onlineUsersListener = (message) => {
-        console.log(message)
         setOnlineUsers(message.data);
       };
-      userChannel.subscribe('getOnlineUsers', onlineUsersListener);
-      apiClient.post("/api/userConnected", { userId })
-      .then(() => {
-        return apiClient.get("/api/onlineUsers");
-      })
-      .then((res) => {
-        setOnlineUsers(res.data.onlineUsers);
-      })
-      .catch(console.error);
+      globalChannel.subscribe("getOnlineUsers", onlineUsersListener);
 
-      // Cleanup function
+      // ----------------------------
+      // subscribe to personal channel (messages)
+      // ----------------------------
+      personalChannel = ably.channels.get(`chat:${userId}`);
+      setChannel(personalChannel); // expose per-user channel in context
+
+      // ----------------------------
+      // Server API call: mark user online
+      // ----------------------------
+      apiClient
+        .post("/api/userConnected", { userId })
+        .then(() => apiClient.get("/api/onlineUsers"))
+        .then((res) => setOnlineUsers(res.data.onlineUsers))
+        .catch(console.error);
+
       return () => {
-        userChannel.unsubscribe('getOnlineUsers', onlineUsersListener);
-        userChannel.detach();
+        //cleanup both channels
+        globalChannel.unsubscribe("getOnlineUsers", onlineUsersListener);
+        globalChannel.detach();
+
+        if (personalChannel) {
+          personalChannel.detach();
+        }
+
         ably.close();
         setChannel(null);
         setAblyClient(null);
-        apiClient.post("/api/userDisconnected", { userId })
-        .then(() => apiClient.get("/api/onlineUsers"))
-        .then((res) => {
-          setOnlineUsers(res.data.onlineUsers); // sync after disconnect
-        })
-        .catch(console.error);
+
+        apiClient
+          .post("/api/userDisconnected", { userId })
+          .then(() => apiClient.get("/api/onlineUsers"))
+          .then((res) => {
+            setOnlineUsers(res.data.onlineUsers); // sync on disconnect
+          })
+          .catch(console.error);
       };
     } else {
-      // Cleanup if user logs out
+      //cleanup if authUser logs out
       if (channel) {
         channel.detach();
         setChannel(null);
@@ -72,8 +82,6 @@ export const SocketContextProvider = ({ children }) => {
         setAblyClient(null);
       }
     }
-    // Only run effect on authUser changes
-    // eslint-disable-next-line
   }, [authUser]);
 
   return (
