@@ -14,6 +14,7 @@ const useGetConversations = () => {
 			try {
 				const { data } = await apiClient.get("/api/users");
 				if (data.error) throw new Error(data.error);
+				console.log(data , 'check if iterable')
 				setConversations(data);
 			} catch (error) {
 				toast.error(error.message);
