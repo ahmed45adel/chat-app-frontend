@@ -28,11 +28,9 @@ const useListenMessages = () => {
 
     // subscribe ONCE
     channel.subscribe("newMessage", handleNewMessage);
-    console.log("Listening for new messages on personal channel");
 
     return () => {
       channel.unsubscribe("newMessage", handleNewMessage);
-      console.log("Stopped listening for new messages");
     };
   }, [channel, selectedConversation?._id, setMessages]); 
 };

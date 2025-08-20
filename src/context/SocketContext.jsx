@@ -12,6 +12,8 @@ export const SocketContextProvider = ({ children }) => {
 
   useEffect(() => {
     if (!authUser) {
+      // If no user is authenticated, ensure Ably client and channel are null
+      if (ably) ably.close(); // Close any existing client if user logs out
       setAbly(null);
       setChannel(null);
       return;
@@ -24,18 +26,24 @@ export const SocketContextProvider = ({ children }) => {
 
     const personalChannel = client.channels.get(`chat:${userId}`);
 
-    const initPresence = async () => {
-      await personalChannel.presence.enter({ online: true });
-    };
-
-    initPresence();
+    // Ably's Realtime client handles connection state,
+    // ensure presence is entered only when connected.
+    client.connection.on('connected', async () => {
+      try {
+        await personalChannel.presence.enter({ online: true });
+      } catch (err) {
+        console.error("Failed to enter presence:", err);
+      }
+    });
 
     setAbly(client);
     setChannel(personalChannel);
 
     return () => {
-      personalChannel.presence.leave();
-      client.close();
+ 
+      if (client) {
+        client.close();
+      }
       setAbly(null);
       setChannel(null);
     };
@@ -45,7 +53,9 @@ export const SocketContextProvider = ({ children }) => {
    * Helper: check if a user is online by looking at their presence set
    */
   const getUserPresence = async (userId) => {
-    if (!ably) return false;
+    if (!ably) {
+      return false;
+    }
     try {
       const userChannel = ably.channels.get(`chat:${userId}`);
       const members = await userChannel.presence.get();
