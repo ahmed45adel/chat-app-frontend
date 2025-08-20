@@ -4,73 +4,60 @@ import { useAuthContext } from "./AuthContext";
 import apiClient from "../utils/apiClient";
 
 const SocketContext = createContext();
-
-export const useSocketContext = () => {
-  return useContext(SocketContext);
-};
+export const useSocketContext = () => useContext(SocketContext);
 
 export const SocketContextProvider = ({ children }) => {
   const [channel, setChannel] = useState(null);
-  const [ablyClient, setAblyClient] = useState(null);
   const [onlineUsers, setOnlineUsers] = useState([]);
   const { authUser } = useAuthContext();
 
   useEffect(() => {
     if (!authUser) {
-      // If user logs out, cleanup client
-      if (ablyClient) {
-        try {
-          ablyClient.close();
-        } catch (err) {
-          console.error("Error closing Ably client:", err);
-        }
-        setAblyClient(null);
-      }
       setChannel(null);
       setOnlineUsers([]);
       return;
     }
 
-    // ----------------------------
-    // Setup on login
-    // ----------------------------
-    const userId = authUser.data._id;
-    const ablyURL = `${import.meta.env.VITE_API_URL}/api/createTokenRequest`;
-    const params = new URLSearchParams({ userId });
-    const urlWithParams = `${ablyURL}?${params.toString()}`;
+    let ably;
+    let globalChannel;
+    let personalChannel;
 
-    const ably = new Realtime({ authUrl: urlWithParams });
-    setAblyClient(ably);
+    const initialize = async () => {
+      const userId = authUser.data._id;
+      const ablyURL = `${import.meta.env.VITE_API_URL}/api/createTokenRequest`;
+      const urlWithParams = `${ablyURL}?userId=${userId}`;
 
-    // Global channel (for online users list)
-    const globalChannel = ably.channels.get("chat:global");
-    const onlineUsersListener = (message) => {
-      setOnlineUsers(message.data);
-    };
-    globalChannel.subscribe("getOnlineUsers", onlineUsersListener);
+      ably = new Realtime({ authUrl: urlWithParams });
 
-    // Personal channel (logged-in user receives messages)
-    const personalChannel = ably.channels.get(`chat:${userId}`);
-    setChannel(personalChannel);
+      // Global channel (online updates)
+      globalChannel = ably.channels.get("chat:global");
+      globalChannel.subscribe("getOnlineUsers", (message) => {
+        setOnlineUsers(message.data || []);
+      });
 
-    // Mark user online via backend
-    apiClient
-      .post("/api/userConnected", { userId })
-      .then(() => apiClient.get("/api/onlineUsers"))
-      .then((res) => setOnlineUsers(res.data.onlineUsers))
-      .catch(console.error);
+      // Personal channel
+      personalChannel = ably.channels.get(`chat:${userId}`);
+      setChannel(personalChannel);
 
-    // ----------------------------
-    // Cleanup function
-    // ----------------------------
-    return () => {
-      // Unsubscribe from listeners
-      globalChannel.unsubscribe("getOnlineUsers", onlineUsersListener);
-      if (personalChannel) {
-        personalChannel.unsubscribe(); // no detach here ✅
+      // Mark user online
+      try {
+        await apiClient.post("/api/userConnected", { userId });
+        const res = await apiClient.get("/api/onlineUsers");
+        setOnlineUsers(res.data.onlineUsers || []);
+      } catch (err) {
+        console.error("Error setting online:", err);
       }
+    };
 
-      // Close Ably client safely (auto detaches channels)
+    initialize();
+
+    return () => {
+      if (globalChannel) {
+        globalChannel.unsubscribe();
+      }
+      if (personalChannel) {
+        personalChannel.unsubscribe();
+      }
       if (ably) {
         try {
           ably.close();
@@ -79,15 +66,17 @@ export const SocketContextProvider = ({ children }) => {
         }
       }
 
-      setChannel(null);
-      setAblyClient(null);
-
       // Mark user offline
-      apiClient
-        .post("/api/userDisconnected", { userId })
-        .then(() => apiClient.get("/api/onlineUsers"))
-        .then((res) => setOnlineUsers(res.data.onlineUsers))
-        .catch(console.error);
+      const userId = authUser?.data?._id;
+      if (userId) {
+        apiClient
+          .post("/api/userDisconnected", { userId })
+          .then(() => apiClient.get("/api/onlineUsers"))
+          .then((res) => setOnlineUsers(res.data.onlineUsers || []))
+          .catch(console.error);
+      }
+
+      setChannel(null);
     };
   }, [authUser]);
 
