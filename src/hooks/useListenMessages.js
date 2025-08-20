@@ -26,7 +26,6 @@ const useListenMessages = () => {
       }
     };
 
-    // subscribe ONCE
     channel.subscribe("newMessage", handleNewMessage);
 
     return () => {
