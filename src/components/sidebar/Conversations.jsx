@@ -7,7 +7,7 @@ const Conversations = () => {
 	return (
 		<div className='py-2 flex flex-col overflow-auto'>
 			{loading?
-			<span className='loading loading-spinner mx-auto'></span>
+			<span className='loading loading-spinner mx-auto text-teal-500'></span>
 			:
 			conversations?.map((conversation, idx) => (
 				<Conversation
@@ -17,8 +17,6 @@ const Conversations = () => {
 					lastIdx={idx === conversations.length - 1}
 				/>
 			))}
-
-			{/* {loading ? <span className='loading loading-spinner mx-auto'></span> : null} */}
 		</div>
 	);
 };
