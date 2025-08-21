@@ -1,12 +1,35 @@
-# React + Vite
+# Chat App
 
-This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
+A modern real-time chat application built with cutting-edge web technologies.
 
-Currently, two official plugins are available:
+## Features
+- Real-time messaging with Ably
+- Conversation management
+- Real-time message notifications and online status
+- User authentication (Login/Signup)
+- Responsive UI with Tailwind CSS
 
-- [@vitejs/plugin-react](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react) uses [Babel](https://babeljs.io/) for Fast Refresh
-- [@vitejs/plugin-react-swc](https://github.com/vitejs/vite-plugin-react/blob/main/packages/plugin-react-swc) uses [SWC](https://swc.rs/) for Fast Refresh
+## Tech Stack
+- React
+- Vite
+- Tailwind
+- React Router
+- Ably
+- Zustand
+- Axios                                                                   
 
-## Expanding the ESLint configuration
+## Environment Variables
 
-If you are developing a production application, we recommend using TypeScript with type-aware lint rules enabled. Check out the [TS template](https://github.com/vitejs/vite/tree/main/packages/create-vite/template-react-ts) for information on how to integrate TypeScript and [`typescript-eslint`](https://typescript-eslint.io) in your project.
+Create a `.env` file with following variables:
+```env
+VITE_API_URL
+ABLY_API_KEY
+```
+
+## Acknowledgements
+- [Ably Docs](https://ably.com/docs/chat/getting-started/react)
+- [Avatar Placeholder](https://avatar-placeholder.iran.liara.run)
+- [Backend Code](https://github.com/ahmed45adel/chat-app-backend)
+
+## Deployment
+- <a href="https://chat-app-frontend-three-theta.vercel.app" target="_blank">Deployed Project Here</a>
